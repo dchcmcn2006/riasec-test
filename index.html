@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>RIASEC 직업적성검사 (학교용 확장판)</title>
+<style>
+body { font-family: sans-serif; max-width: 1000px; margin:auto; background:#f4f4f4; padding:20px;}
+.question { background:#fff; padding:15px; margin-bottom:10px; border-radius:8px;}
+select { margin-top:5px; }
+button { padding:12px 30px; font-size:16px; display:block; margin:30px auto;}
+.result { background:#fff; padding:25px; border-radius:8px;}
+h2,h3 { border-bottom:1px solid #ddd; padding-bottom:5px;}
+.notice { font-size:14px; color:#555; margin-top:20px;}
+</style>
+</head>
+
+<body>
+
+<h1>RIASEC 직업적성검사</h1>
+<p>각 문항에 대해 자신에게 얼마나 해당하는지 선택하세요. (1~5점)</p>
+
+<form id="test"></form>
+<button onclick="calculate()">결과 보기</button>
+
+<div id="result" class="result" style="display:none;"></div>
+
+<script>
+// ---------------- 문항 ----------------
+const questions = [
+  // R
+  ...[
+    "손이나 몸을 사용해 직접 무언가를 만드는 일이 잘 맞는다.",
+    "기계나 도구를 다루는 활동에 거부감이 없다.",
+    "야외에서 활동하거나 현장을 오가는 일이 편하다.",
+    "말로 설명하는 것보다 직접 해보는 것이 이해가 빠르다.",
+    "눈에 보이는 결과물이 나오는 일이 보람 있다.",
+    "실제로 작동하는지가 중요하다.",
+    "경험을 통해 배우는 방식이 효과적이다.",
+    "일 자체에 집중할 수 있는 환경이 좋다.",
+    "즉각적인 문제 해결에 강하다.",
+    "실용성과 효율성을 중시한다."
+  ].map(t=>({text:t,type:"R"})),
+
+  // I
+  ...[
+    "현상의 원인이나 구조를 분석하는 것이 즐겁다.",
+    "논리적으로 파고드는 과정에 몰입한다.",
+    "‘왜 그런가?’라는 질문을 자주 한다.",
+    "근거와 이성을 중시한다.",
+    "이론과 개념 이해에 성취감을 느낀다.",
+    "혼자 깊이 생각할 시간이 필요하다.",
+    "정답이 하나가 아닌 문제를 좋아한다.",
+    "자료를 정리해 결론을 내리는 것이 잘 맞는다.",
+    "감정보다 논리를 선호한다.",
+    "지적 호기심이 삶의 동기다."
+  ].map(t=>({text:t,type:"I"})),
+
+  // A
+  ...[
+    "글·그림·음악 등으로 표현하는 것을 좋아한다.",
+    "정해진 방식보다 나만의 방식을 선호한다.",
+    "감정과 분위기에 민감하다.",
+    "규칙이 많으면 답답하다.",
+    "상상하는 활동에서 에너지를 얻는다.",
+    "과정 자체가 중요하다.",
+    "미적 감각과 독창성을 중시한다.",
+    "감정을 솔직히 표현하고 싶다.",
+    "반복적인 작업은 지루하다.",
+    "나만의 관점을 드러내고 싶다."
+  ].map(t=>({text:t,type:"A"})),
+
+  // S
+  ...[
+    "다른 사람을 돕는 일에서 보람을 느낀다.",
+    "타인의 성장을 보는 것이 기쁘다.",
+    "대화를 통해 문제를 해결한다.",
+    "타인의 감정을 잘 알아차린다.",
+    "협력적인 분위기가 좋다.",
+    "함께 성과를 내는 것이 좋다.",
+    "갈등 중재 역할을 맡는다.",
+    "도움이 되었다는 느낌이 중요하다.",
+    "배려 있는 환경이 편하다.",
+    "관계 속에서 의미를 찾는다."
+  ].map(t=>({text:t,type:"S"})),
+
+  // E
+  ...[
+    "의견을 분명히 말하는 편이다.",
+    "사람들을 이끄는 역할을 맡는다.",
+    "목표 달성이 재미있다.",
+    "새로운 기회에 도전하고 싶다.",
+    "책임 있는 위치가 부담스럽지 않다.",
+    "조직 운영에 관심이 있다.",
+    "경쟁이 동기가 된다.",
+    "성과 평가를 당연하게 여긴다.",
+    "영향력 있는 위치가 매력적이다.",
+    "주도적으로 결정한다."
+  ].map(t=>({text:t,type:"E"})),
+
+  // C
+  ...[
+    "규칙과 절차가 명확하면 안정된다.",
+    "계획을 세워 실행한다.",
+    "자료 정리와 관리에 강하다.",
+    "예측 가능한 환경이 편하다.",
+    "문서·숫자 작업이 어렵지 않다.",
+    "성실함이 중요하다.",
+    "체계적인 조직을 선호한다.",
+    "실수를 줄이려 꼼꼼하다.",
+    "명확한 지침이 효율을 높인다.",
+    "안정성과 지속성을 중시한다."
+  ].map(t=>({text:t,type:"C"}))
+];
+
+// ---------------- 문항 출력 ----------------
+const form = document.getElementById("test");
+questions.forEach((q,i)=>{
+  form.innerHTML += `
+    <div class="question">
+      <p>${i+1}. ${q.text}</p>
+      <select data-type="${q.type}">
+        <option value="1">1 전혀 그렇지 않다</option>
+        <option value="2">2 그렇지 않은 편</option>
+        <option value="3">3 보통</option>
+        <option value="4">4 그런 편</option>
+        <option value="5">5 매우 그렇다</option>
+      </select>
+    </div>`;
+});
+
+// ---------------- 해석 데이터 ----------------
+const typeDesc = {
+R:"현실형은 실제로 작동하는 세계와 맞닿아 있을 때 만족을 느낍니다.",
+I:"탐구형은 이해하고 설명할 수 있을 때 성취를 느낍니다.",
+A:"예술형은 자신만의 방식으로 표현할 자유를 중시합니다.",
+S:"사회형은 타인의 성장과 관계 속에서 의미를 찾습니다.",
+E:"진취형은 영향력을 발휘하고 변화를 만들어내는 데서 활력을 얻습니다.",
+C:"관습형은 질서와 안정 속에서 역할을 수행할 때 강점을 보입니다."
+};
+
+const careers = {
+R:["기계정비사","전기기술자","설비관리사","토목기사","안전관리자","산림관리원","소방공무원"],
+I:["연구원","대학교수","데이터분석가","정책연구원","입법조사관","과학연구원"],
+A:["작가","콘텐츠크리에이터","디자이너","전시기획자","문화예술교육사"],
+S:["교사","장학사","교육연구사","상담교사","사회복지사","평생교육사"],
+E:["기획자","정책기획관","HRD전문가","공공기관관리자","사회적기업가"],
+C:["행정공무원","행정실무사","회계사무원","기록연구사","교육행정사"]
+};
+
+// ---------------- 결과 계산 ----------------
+function calculate(){
+  let scores={R:0,I:0,A:0,S:0,E:0,C:0};
+  document.querySelectorAll("select").forEach(s=>{
+    scores[s.dataset.type]+=parseInt(s.value);
+  });
+
+  let sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  let code=sorted.slice(0,3).map(e=>e[0]).join("");
+
+  document.getElementById("result").style.display="block";
+  document.getElementById("result").innerHTML=`
+    <h2>검사 결과</h2>
+    <p><strong>RIASEC 코드:</strong> ${code}</p>
+
+    <h3>유형 해석</h3>
+    ${sorted.slice(0,3).map(e=>`<p><strong>${e[0]}</strong>: ${typeDesc[e[0]]}</p>`).join("")}
+
+    <h3>추천 진로</h3>
+    <ul>${[...new Set(sorted.slice(0,3).flatMap(e=>careers[e[0]]))]
+      .map(c=>`<li>${c}</li>`).join("")}</ul>
+
+    <div class="notice">
+      이 결과는 당신을 하나의 유형으로 규정하지 않습니다.<br>
+      다만 당신이 어떤 환경에서 더 잘 성장할 가능성이 있는지를 보여줄 뿐입니다.
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>
