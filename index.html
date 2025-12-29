@@ -2,15 +2,50 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>RIASEC 직업적성검사 (학교용 확장판)</title>
+<title>RIASEC 직업적성검사 (체험 활동 포함)</title>
+
 <style>
-body { font-family: sans-serif; max-width: 1000px; margin:auto; background:#f4f4f4; padding:20px;}
-.question { background:#fff; padding:15px; margin-bottom:10px; border-radius:8px;}
+body {
+  font-family: sans-serif;
+  max-width: 1000px;
+  margin:auto;
+  background:#f4f4f4;
+  padding:20px;
+}
+.question {
+  background:#fff;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:8px;
+}
 select { margin-top:5px; }
-button { padding:12px 30px; font-size:16px; display:block; margin:30px auto;}
-.result { background:#fff; padding:25px; border-radius:8px;}
-h2,h3 { border-bottom:1px solid #ddd; padding-bottom:5px;}
-.notice { font-size:14px; color:#555; margin-top:20px;}
+button {
+  padding:12px 30px;
+  font-size:16px;
+  display:block;
+  margin:30px auto;
+  cursor:pointer;
+}
+.result {
+  background:#fff;
+  padding:25px;
+  border-radius:8px;
+}
+.activity {
+  background:#eef6ff;
+  padding:20px;
+  margin-top:20px;
+  border-radius:8px;
+}
+.notice {
+  font-size:14px;
+  color:#555;
+  margin-top:20px;
+}
+h2,h3,h4 {
+  border-bottom:1px solid #ddd;
+  padding-bottom:5px;
+}
 </style>
 </head>
 
@@ -27,7 +62,6 @@ h2,h3 { border-bottom:1px solid #ddd; padding-bottom:5px;}
 <script>
 // ---------------- 문항 ----------------
 const questions = [
-  // R
   ...[
     "손이나 몸을 사용해 직접 무언가를 만드는 일이 잘 맞는다.",
     "기계나 도구를 다루는 활동에 거부감이 없다.",
@@ -41,7 +75,6 @@ const questions = [
     "실용성과 효율성을 중시한다."
   ].map(t=>({text:t,type:"R"})),
 
-  // I
   ...[
     "현상의 원인이나 구조를 분석하는 것이 즐겁다.",
     "논리적으로 파고드는 과정에 몰입한다.",
@@ -55,7 +88,6 @@ const questions = [
     "지적 호기심이 삶의 동기다."
   ].map(t=>({text:t,type:"I"})),
 
-  // A
   ...[
     "글·그림·음악 등으로 표현하는 것을 좋아한다.",
     "정해진 방식보다 나만의 방식을 선호한다.",
@@ -69,7 +101,6 @@ const questions = [
     "나만의 관점을 드러내고 싶다."
   ].map(t=>({text:t,type:"A"})),
 
-  // S
   ...[
     "다른 사람을 돕는 일에서 보람을 느낀다.",
     "타인의 성장을 보는 것이 기쁘다.",
@@ -83,7 +114,6 @@ const questions = [
     "관계 속에서 의미를 찾는다."
   ].map(t=>({text:t,type:"S"})),
 
-  // E
   ...[
     "의견을 분명히 말하는 편이다.",
     "사람들을 이끄는 역할을 맡는다.",
@@ -97,7 +127,6 @@ const questions = [
     "주도적으로 결정한다."
   ].map(t=>({text:t,type:"E"})),
 
-  // C
   ...[
     "규칙과 절차가 명확하면 안정된다.",
     "계획을 세워 실행한다.",
@@ -113,23 +142,23 @@ const questions = [
 ];
 
 // ---------------- 문항 출력 ----------------
-const form = document.getElementById("test");
+const form=document.getElementById("test");
 questions.forEach((q,i)=>{
-  form.innerHTML += `
-    <div class="question">
-      <p>${i+1}. ${q.text}</p>
-      <select data-type="${q.type}">
-        <option value="1">1 전혀 그렇지 않다</option>
-        <option value="2">2 그렇지 않은 편</option>
-        <option value="3">3 보통</option>
-        <option value="4">4 그런 편</option>
-        <option value="5">5 매우 그렇다</option>
-      </select>
-    </div>`;
+  form.innerHTML+=`
+  <div class="question">
+    <p>${i+1}. ${q.text}</p>
+    <select data-type="${q.type}">
+      <option value="1">1 전혀 아니다</option>
+      <option value="2">2 아니다</option>
+      <option value="3">3 보통</option>
+      <option value="4">4 그렇다</option>
+      <option value="5">5 매우 그렇다</option>
+    </select>
+  </div>`;
 });
 
-// ---------------- 해석 데이터 ----------------
-const typeDesc = {
+// ---------------- 해석 ----------------
+const typeDesc={
 R:"현실형은 실제로 작동하는 세계와 맞닿아 있을 때 만족을 느낍니다.",
 I:"탐구형은 이해하고 설명할 수 있을 때 성취를 느낍니다.",
 A:"예술형은 자신만의 방식으로 표현할 자유를 중시합니다.",
@@ -138,14 +167,25 @@ E:"진취형은 영향력을 발휘하고 변화를 만들어내는 데서 활�
 C:"관습형은 질서와 안정 속에서 역할을 수행할 때 강점을 보입니다."
 };
 
-const careers = {
-R:["기계정비사","전기기술자","설비관리사","토목기사","안전관리자","산림관리원","소방공무원"],
-I:["연구원","대학교수","데이터분석가","정책연구원","입법조사관","과학연구원"],
-A:["작가","콘텐츠크리에이터","디자이너","전시기획자","문화예술교육사"],
-S:["교사","장학사","교육연구사","상담교사","사회복지사","평생교육사"],
-E:["기획자","정책기획관","HRD전문가","공공기관관리자","사회적기업가"],
-C:["행정공무원","행정실무사","회계사무원","기록연구사","교육행정사"]
+const careers={
+R:["기계정비사","전기기술자","소방공무원","안전관리자"],
+I:["연구원","데이터분석가","과학자","정책연구원"],
+A:["작가","디자이너","콘텐츠크리에이터","문화기획자"],
+S:["교사","상담교사","사회복지사","교육연구사"],
+E:["기획자","정책기획관","사회적기업가","경영자"],
+C:["행정공무원","교육행정사","기록연구사","회계사무원"]
 };
+
+const activities={
+R:["메이커 프로젝트","학교 시설 점검","환경 정화 활동","소방서 체험"],
+I:["소논문 작성","데이터 분석","탐구 동아리","박물관 해설"],
+A:["영상·포스터 제작","에세이 창작","전시 기획","문화예술 봉사"],
+S:["학습 멘토링","또래 상담","복지시설 봉사","교육 봉사"],
+E:["학생회","행사 기획","모의 창업","캠페인 운영"],
+C:["도서관 정리","행정 보조","기록 프로젝트","공공기관 체험"]
+};
+
+let sorted=[];
 
 // ---------------- 결과 계산 ----------------
 function calculate(){
@@ -154,26 +194,43 @@ function calculate(){
     scores[s.dataset.type]+=parseInt(s.value);
   });
 
-  let sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
-  let code=sorted.slice(0,3).map(e=>e[0]).join("");
+  sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  const code=sorted.slice(0,3).map(e=>e[0]).join("");
 
   document.getElementById("result").style.display="block";
   document.getElementById("result").innerHTML=`
-    <h2>검사 결과</h2>
-    <p><strong>RIASEC 코드:</strong> ${code}</p>
+  <h2>검사 결과</h2>
+  <p><strong>RIASEC 코드:</strong> ${code}</p>
 
-    <h3>유형 해석</h3>
-    ${sorted.slice(0,3).map(e=>`<p><strong>${e[0]}</strong>: ${typeDesc[e[0]]}</p>`).join("")}
+  <h3>유형 해석</h3>
+  ${sorted.slice(0,3).map(e=>`<p><strong>${e[0]}</strong> : ${typeDesc[e[0]]}</p>`).join("")}
 
-    <h3>추천 진로</h3>
-    <ul>${[...new Set(sorted.slice(0,3).flatMap(e=>careers[e[0]]))]
-      .map(c=>`<li>${c}</li>`).join("")}</ul>
+  <button onclick="showActivities()">추천 체험 활동 보기</button>
+  <div id="activityArea"></div>
 
-    <div class="notice">
-      이 결과는 당신을 하나의 유형으로 규정하지 않습니다.<br>
-      다만 당신이 어떤 환경에서 더 잘 성장할 가능성이 있는지를 보여줄 뿐입니다.
-    </div>
-  `;
+  <h3>추천 진로</h3>
+  <ul>${[...new Set(sorted.slice(0,3).flatMap(e=>careers[e[0]]))]
+  .map(c=>`<li>${c}</li>`).join("")}</ul>
+
+  <div class="notice">
+    이 결과는 당신을 규정하지 않습니다.<br>
+    경험을 통해 확인하고 수정해 나가는 것이 진로 탐색의 핵심입니다.
+  </div>`;
+}
+
+function showActivities(){
+  document.getElementById("activityArea").innerHTML=`
+  <div class="activity">
+    <h3>추천 체험 활동</h3>
+    ${sorted.slice(0,3).map(e=>`
+      <h4>${e[0]} 유형</h4>
+      <ul>${activities[e[0]].map(a=>`<li>${a}</li>`).join("")}</ul>
+    `).join("")}
+    <p class="notice">
+      위 활동은 ‘직접 경험해 보기 위한 제안’입니다.<br>
+      해보고 맞지 않다고 느끼는 것도 중요한 성찰입니다.
+    </p>
+  </div>`;
 }
 </script>
 
